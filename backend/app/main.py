@@ -13,7 +13,10 @@ from .services import duplicate_reports, priority
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title="StreetSafe API", version="0.1.0")
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_credentials=False, allow_methods=["GET", "POST", "PATCH"], allow_headers=["Content-Type", "X-Admin-Key"])
+cors_origins = ["http://localhost:5173"]
+if configured_origins := os.getenv("CORS_ALLOW_ORIGINS"):
+    cors_origins.extend(origin.strip() for origin in configured_origins.split(",") if origin.strip())
+app.add_middleware(CORSMiddleware, allow_origins=cors_origins, allow_credentials=False, allow_methods=["GET", "POST", "PATCH"], allow_headers=["Content-Type", "X-Admin-Key"])
 
 def serialize(report: Report, all_reports: list[Report]) -> ReportOut:
     data = {c.name: getattr(report, c.name) for c in report.__table__.columns if c.name != "id"}
